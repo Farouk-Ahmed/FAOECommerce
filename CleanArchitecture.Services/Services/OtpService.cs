@@ -16,19 +16,20 @@ namespace CleanArchitecture.Services.Services
             _dbContext = dbContext;
         }
 
-        public async Task SetOtpAsync(string key, string otp, TimeSpan expiration)
+        public async Task SetOtpAsync(string key, string otp, string userName, TimeSpan expiration)
         {
             var expiresAt = DateTime.UtcNow.Add(expiration);
             var entity = await _dbContext.Otps.FirstOrDefaultAsync(x => x.Key == key);
             if (entity == null)
             {
-                entity = new Otp { Key = key, Code = otp, ExpiresAt = expiresAt };
+                entity = new Otp { Key = key, Code = otp, ExpiresAt = expiresAt, UserName = userName };
                 _dbContext.Otps.Add(entity);
             }
             else
             {
                 entity.Code = otp;
                 entity.ExpiresAt = expiresAt;
+                entity.UserName = userName;
                 _dbContext.Otps.Update(entity);
             }
             await _dbContext.SaveChangesAsync();

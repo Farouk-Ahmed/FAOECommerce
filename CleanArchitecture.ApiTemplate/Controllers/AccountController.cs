@@ -136,8 +136,8 @@ namespace CleanArchitecture.Api.Controllers
 
             var otp = GenerateSimpleOtp();
 
-            // خزّن OTP في Redis بدلاً من قاعدة البيانات
-            await _otpService.SetOtpAsync(email, otp, TimeSpan.FromMinutes(5));
+            // Save OTP in the database with user name
+            await _otpService.SetOtpAsync(email, otp, user.UserName, TimeSpan.FromMinutes(5));
 
             var message = new Message(new string[] { user.Email! }, "Password Reset OTP", $"Your OTP is: {otp}");
             _emailService.SendEmail(message);
