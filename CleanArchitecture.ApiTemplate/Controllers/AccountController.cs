@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Text;
 
 namespace CleanArchitecture.Api.Controllers
 {
@@ -41,6 +43,7 @@ namespace CleanArchitecture.Api.Controllers
             _authServices = authServices;
             _otpService = otpService;
         }
+
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromForm] RegisterUser registerUser)
         {
@@ -55,28 +58,20 @@ namespace CleanArchitecture.Api.Controllers
             var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
                 new { token = response.Response.Token, email = registerUser.Email }, Request.Scheme);
 
-            #region الرساله
+            // Render confirmation email from HTML template
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTemplates", "RegisterConfirmation.html");
+            var htmlContent = RenderTemplate(templatePath, new Dictionary<string, string>
+            {
+                { "FirstName", registerUser.FirstName },
+                { "LastName", registerUser.LastName },
+                { "ConfirmationLink", confirmationLink }
+            });
+
             var message = new Message(
                 new string[] { registerUser.Email! },
                 "Confirm Your Email",
-                $@"
-<html>
-<body>
-    <p>Hello {registerUser.FirstName} {registerUser.LastName},</p>
-    <p>Thank you for registering. Please confirm your email by clicking the button below:</p>
-    <p>
-        <a href='{confirmationLink}' 
-           style='display: inline-block; padding: 10px 20px; font-size: 16px; color: white; 
-                  background-color: #007bff; text-decoration: none; border-radius: 5px;'>
-            Confirm Email
-        </a>
-    </p>
-    <p>Best regards,<br>Farouk Ahmed</p>
-</body>
-</html>"
+                htmlContent
             );
-            #endregion
-
 
             try
             {
@@ -86,6 +81,20 @@ namespace CleanArchitecture.Api.Controllers
             {
                 return StatusCode(500, "Email error: " + ex.Message);
             }
+
+            // Send welcome email
+            var welcomePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTemplates", "Welcome.html");
+            var welcomeContent = RenderTemplate(welcomePath, new Dictionary<string, string>
+            {
+                { "FirstName", registerUser.FirstName },
+                { "LastName", registerUser.LastName }
+            });
+            var welcomeMessage = new Message(
+                new string[] { registerUser.Email! },
+                "Welcome to Our Platform",
+                welcomeContent
+            );
+            try { _emailService.SendEmail(welcomeMessage); } catch { /* ignore */ }
 
             return Ok(response);
         }
@@ -132,14 +141,23 @@ namespace CleanArchitecture.Api.Controllers
         {
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
-                return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
+                return Ok(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
 
             var otp = GenerateSimpleOtp();
 
             // Save OTP in the database with user name
-            await _otpService.SetOtpAsync(email, otp, user.UserName, TimeSpan.FromMinutes(5));
+            await _otpService.SetOtpAsync(email, otp, user.UserName, user.Id, TimeSpan.FromMinutes(5));
 
-            var message = new Message(new string[] { user.Email! }, "Password Reset OTP", $"Your OTP is: {otp}");
+            // Render OTP email from HTML template
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTemplates", "Otp.html");
+            var htmlContent = RenderTemplate(templatePath, new Dictionary<string, string>
+            {
+                { "FirstName", user.FirstName },
+                { "LastName", user.LastName },
+                { "Otp", otp }
+            });
+
+            var message = new Message(new string[] { user.Email! }, "Password Reset OTP", htmlContent);
             _emailService.SendEmail(message);
 
             return Ok(new Response { IsSuccess = true, Message = $"OTP sent to {user.Email}.", Status = "Success" });
@@ -159,6 +177,7 @@ namespace CleanArchitecture.Api.Controllers
 
             return Ok("OTP verified successfully");
         }
+
         [HttpPost("ResetPassword")]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromForm] ResetPassword request)
@@ -173,7 +192,7 @@ namespace CleanArchitecture.Api.Controllers
 
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
-                return BadRequest(new { message = "User not found" });
+                return BadRequest(new Response { IsSuccess = false, Message = "OTP verification required, invalid, or already used.", Status = "Not Found" });
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
@@ -181,12 +200,20 @@ namespace CleanArchitecture.Api.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            
-            await _otpService.RemoveOtpAsync(request.Email);
+            await _otpService.SetOtpAsUsedAsync(request.Email);
+
+            // Send password changed email
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTemplates", "PasswordChanged.html");
+            var htmlContent = RenderTemplate(templatePath, new Dictionary<string, string>
+            {
+                { "FirstName", user.FirstName },
+                { "LastName", user.LastName }
+            });
+            var message = new Message(new string[] { user.Email! }, "Password Changed", htmlContent);
+            _emailService.SendEmail(message);
 
             return Ok(new { message = "Password reset successfully" });
         }
-
 
         #region Private Methods
         private string GenerateSimpleOtp()
@@ -194,7 +221,16 @@ namespace CleanArchitecture.Api.Controllers
             var random = new Random();
             return random.Next(1000, 9999).ToString();
         }
+
+        private string RenderTemplate(string templatePath, Dictionary<string, string> values)
+        {
+            var template = System.IO.File.ReadAllText(templatePath, Encoding.UTF8);
+            foreach (var pair in values)
+            {
+                template = template.Replace($"{{{{{pair.Key}}}}}", pair.Value);
+            }
+            return template;
+        }
         #endregion
     }
-
 }
