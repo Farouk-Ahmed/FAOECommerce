@@ -1,40 +1,53 @@
 ﻿using CleanArchitecture.Services.Interfaces;
-using StackExchange.Redis;
+using CleanArchitecture.DataAccess.Contexts;
+using CleanArchitecture.DataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CleanArchitecture.Services.Services
 {
     public class OtpService : IOtpService
     {
-        private readonly IConnectionMultiplexer _redis;
+        private readonly ApplicationDbContext _dbContext;
 
-        public OtpService(IConnectionMultiplexer redis)
+        public OtpService(ApplicationDbContext dbContext)
         {
-            _redis = redis;
+            _dbContext = dbContext;
         }
 
         public async Task SetOtpAsync(string key, string otp, TimeSpan expiration)
         {
-            var db = _redis.GetDatabase();
-            await db.StringSetAsync(key, otp, expiration);
+            var expiresAt = DateTime.UtcNow.Add(expiration);
+            var entity = await _dbContext.Otps.FirstOrDefaultAsync(x => x.Key == key);
+            if (entity == null)
+            {
+                entity = new Otp { Key = key, Code = otp, ExpiresAt = expiresAt };
+                _dbContext.Otps.Add(entity);
+            }
+            else
+            {
+                entity.Code = otp;
+                entity.ExpiresAt = expiresAt;
+                _dbContext.Otps.Update(entity);
+            }
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<string> GetOtpAsync(string key)
         {
-            var db = _redis.GetDatabase();
-            return await db.StringGetAsync(key);
+            var entity = await _dbContext.Otps.FirstOrDefaultAsync(x => x.Key == key && x.ExpiresAt > DateTime.UtcNow);
+            return entity?.Code;
         }
 
-       
         public async Task RemoveOtpAsync(string key)
         {
-            var db = _redis.GetDatabase();
-            await db.KeyDeleteAsync(key);
+            var entity = await _dbContext.Otps.FirstOrDefaultAsync(x => x.Key == key);
+            if (entity != null)
+            {
+                _dbContext.Otps.Remove(entity);
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
-
 }

@@ -15,6 +15,7 @@ namespace CleanArchitecture.DataAccess.Contexts
         public DbSet<ProductPhoto> ProductPhotos { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Otp> Otps { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
 

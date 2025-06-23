@@ -1,4 +1,4 @@
-
+﻿
 using BrainHope.Services.DTO.Email;
 using CleanArchitecture.DataAccess;
 using CleanArchitecture.DataAccess.Contexts;
@@ -73,11 +73,24 @@ namespace CleanArchitecture.Api
             builder.Services.AddAuthorization();
 
             // Redis
-            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-            {
-                var redisConnection = config.GetSection("Redis")["ConnectionString"];
-                return ConnectionMultiplexer.Connect(redisConnection);
-            });
+          
+
+            //var redisOptions = new ConfigurationOptions
+            //{
+            //    EndPoints = { "redis-15356.c251.east-us-mz.azure.redns.redis-cloud.com:15356" },
+            //    Password = "b4h7EzqUCTHgAT6NQ19Pa0jJeSWacnxr",
+            //    User = "default", 
+            //    Ssl = true,
+            //    AbortOnConnectFail = false
+            //};
+
+            //redisOptions.CertificateValidation += (sender, cert, chain, errors) => true;
+
+            //builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+            //    ConnectionMultiplexer.Connect(redisOptions));
+
+
+
 
             var app = builder.Build();
 

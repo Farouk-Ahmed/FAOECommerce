@@ -71,7 +71,7 @@ namespace CleanArchitecture.Api.Controllers
             Confirm Email
         </a>
     </p>
-    <p>Best regards,<br>Mohamed Saad - Hawy</p>
+    <p>Best regards,<br>Farouk Ahmed</p>
 </body>
 </html>"
             );
