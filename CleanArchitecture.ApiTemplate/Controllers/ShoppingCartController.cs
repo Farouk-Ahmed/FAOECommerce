@@ -2,6 +2,8 @@ using CleanArchitecture.DataAccess.IRepository;
 using CleanArchitecture.DataAccess.Models;
 using CleanArchitecture.DataAccess.Repsitory;
 using CleanArchitecture.DataAccess.IUnitOfWorks;
+using CleanArchitecture.Services.DTOs.ShoppingCarts;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +42,15 @@ namespace CleanArchitecture.Api.Controllers
         public IActionResult GetCart(int userId)
         {
             var items = _repository.GetAll(i => i.UserId == userId.ToString(), "Product");
-            return Ok(items);
+            var itemDtos = items.Select(i => new ShoppingCartItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product?.Name,
+                Quantity = i.Quantity,
+                Price = i.Product?.Price ?? 0
+            }).ToList();
+            return Ok(itemDtos);
         }
 
         [HttpPost]
@@ -49,7 +59,15 @@ namespace CleanArchitecture.Api.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
             _repository.Add(item);
             await _unitOfWork.Complete();
-            return Ok(item);
+            var dto = new ShoppingCartItemDto
+            {
+                Id = item.Id,
+                ProductId = item.ProductId,
+                ProductName = item.Product?.Name,
+                Quantity = item.Quantity,
+                Price = item.Product?.Price ?? 0
+            };
+            return Ok(dto);
         }
 
         [HttpPut("{id}")]
@@ -60,7 +78,15 @@ namespace CleanArchitecture.Api.Controllers
             if (existing == null) return NotFound();
             _repository.Update(item);
             await _unitOfWork.Complete();
-            return Ok(item);
+            var dto = new ShoppingCartItemDto
+            {
+                Id = item.Id,
+                ProductId = item.ProductId,
+                ProductName = item.Product?.Name,
+                Quantity = item.Quantity,
+                Price = item.Product?.Price ?? 0
+            };
+            return Ok(dto);
         }
 
         [HttpDelete("{id}")]
@@ -103,7 +129,21 @@ namespace CleanArchitecture.Api.Controllers
             }
 
             await _unitOfWork.Complete();
-            return Ok(order);
+            // Return a simple order DTO
+            var orderDto = new CleanArchitecture.Services.DTOs.Orders.OrderDto
+            {
+                Id = order.Id,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                Items = order.OrderItems?.Select(oi => new CleanArchitecture.Services.DTOs.Orders.OrderItemDto
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product?.Name,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice
+                }).ToList() ?? new List<CleanArchitecture.Services.DTOs.Orders.OrderItemDto>()
+            };
+            return Ok(orderDto);
         }
     }
 }

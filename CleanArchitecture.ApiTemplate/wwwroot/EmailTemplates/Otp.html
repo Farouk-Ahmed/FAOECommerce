@@ -1,9 +1,142 @@
-<!-- OTP Email -->
-<html>
-<body>
-    <p>Hello {{FirstName}} {{LastName}},</p>
-    <p>Your OTP is: <strong>{{Otp}}</strong></p>
-    <p>This OTP is valid for 5 minutes.</p>
-    <p>Best regards,<br>FAO E-Commerce support team</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your One-Time Password (OTP) - [Your Project Name]</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            width: 100% !important;
+        }
+
+        table {
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        td {
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            outline: none;
+            text-decoration: none;
+            -ms-interpolation-mode: bicubic;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff; /* Primary link color */
+        }
+
+        /* Responsive styles */
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                padding: 0 10px !important;
+            }
+
+            .header-image img {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .content-padding {
+                padding: 20px !important;
+            }
+
+            .otp-code {
+                font-size: 28px !important; /* Smaller on mobile */
+                padding: 15px 0 !important;
+            }
+        }
+    </style>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+
+    <center style="width: 100%; background-color: #f4f4f4;">
+        <div style="display: none; font-size: 1px; color: #f4f4f4; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
+            Here is your One-Time Password for [Your Project Name]. Valid for 5 minutes.
+        </div>
+
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;">
+            <tr>
+                <td align="center" style="padding: 20px 0;">
+                    <table class="container" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td align="center" style="padding: 20px 0;">
+                                <a href="[Your Website URL]" target="_blank" style="text-decoration: none;">
+                                    <img src="https://i.imghippo.com/files/ZyK5904cK.png" alt="[Your Project Name] Logo" width="150" style="display: block; border: 0; outline: none; text-decoration: none;">
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="header-image" align="center">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="content-padding" style="padding: 40px;">
+                                <h1 style="color: #333333; font-size: 28px; margin-bottom: 20px; text-align: center;">Your One-Time Password</h1>
+
+                                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                                    Hello {{FirstName}} {{LastName}},
+                                </p>
+                                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                                    You've requested a One-Time Password (OTP) to proceed with your action. Please use the code below:
+                                </p>
+
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+                                    <tr>
+                                        <td align="center" style="background-color: #f0f0f0; border-radius: 5px; padding: 20px; border: 1px solid #e0e0e0;">
+                                            <p class="otp-code" style="font-size: 36px; font-weight: bold; color: #333333; margin: 0; letter-spacing: 3px;">
+                                                <strong>{{Otp}}</strong>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                                    This OTP is valid for **5 minutes**. Please do not share this code with anyone.
+                                </p>
+                                <p style="color: #555555; font-size: 16px; line-height: 1.6;">
+                                    If you did not request this OTP, please ignore this email.
+                                </p>
+
+                                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-top: 30px;">
+                                    Best regards,<br>
+                                    The **FAO E-Commerce Support Team**
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td align="center" style="padding: 30px 40px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; border-top: 1px solid #eeeeee;">
+                                <p style="font-size: 12px; color: #888888; margin-bottom: 10px;">
+                                    &copy; 2025 FAO E-Commerce. All rights reserved.
+                                </p>
+                                <p style="font-size: 12px; color: #888888; margin-bottom: 10px;">
+                                    [Your Company Address, if applicable]
+                                </p>
+                                <p style="font-size: 12px; color: #888888;">
+                                    <a href="[Link to Unsubscribe Page]" style="color: #888888; text-decoration: underline;">Unsubscribe</a> | <a href="[Link to Privacy Policy]" style="color: #888888; text-decoration: underline;">Privacy Policy</a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
 </body>
 </html>

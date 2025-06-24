@@ -22,17 +22,15 @@ namespace CleanArchitecture.Services.Services
             var entity = await _dbContext.Otps.FirstOrDefaultAsync(x => x.Key == key);
             if (entity == null)
             {
-                // إنشاء OTP جديد وتعيين IsUsed و UserId
                 entity = new Otp { Key = key, Code = otp, ExpiresAt = expiresAt, UserName = userName, UserId = userId, IsUsed = false };
                 _dbContext.Otps.Add(entity);
             }
             else
             {
-                // تحديث OTP موجود وإعادة تعيين IsUsed إلى false (لأنك تُنشئ OTP جديدًا لنفس المفتاح)
                 entity.Code = otp;
                 entity.ExpiresAt = expiresAt;
                 entity.UserName = userName;
-                entity.UserId = userId; // تحديث UserId
+                entity.UserId = userId; 
                 entity.IsUsed = false;
                 _dbContext.Otps.Update(entity);
             }
@@ -41,7 +39,6 @@ namespace CleanArchitecture.Services.Services
 
         public async Task<string> GetOtpAsync(string key)
         {
-            // استرجاع OTP فقط إذا كان صالحًا (لم تنته صلاحيته) ولم يتم استخدامه بعد
             var entity = await _dbContext.Otps.FirstOrDefaultAsync(x => x.Key == key && x.ExpiresAt > DateTime.UtcNow && !x.IsUsed);
             return entity?.Code;
         }

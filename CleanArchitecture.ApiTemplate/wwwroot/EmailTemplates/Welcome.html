@@ -1,8 +1,172 @@
 <!-- Welcome Email -->
-<html>
-<body>
-    <p>Welcome {{FirstName}} {{LastName}},</p>
-    <p>Your account has been created successfully. We're glad to have you with us!</p>
-    <p>Best regards,<br>FAO E-Commerce support team</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to FAO E-Commerce</title>
+    <style>
+        /* Global styles - some clients might ignore this, but it's good practice */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            width: 100% !important;
+        }
+
+        table {
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        td {
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            outline: none;
+            text-decoration: none;
+            -ms-interpolation-mode: bicubic;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff; /* Primary link color */
+        }
+
+        /* Responsive styles (limited support in some clients) */
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                padding: 0 10px !important;
+            }
+
+            .header-image img {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .content-padding {
+                padding: 20px !important;
+            }
+
+            .button {
+                width: 100% !important;
+                display: block !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+
+            .hi-image {
+                width: 80px !important; /* Adjust for mobile */
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+
+    <center style="width: 100%; background-color: #f4f4f4;">
+        <div style="display: none; font-size: 1px; color: #f4f4f4; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
+            Welcome to [Your Project Name]! Your journey starts here.
+        </div>
+
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;">
+            <tr>
+                <td align="center" style="padding: 20px 0;">
+                    <table class="container" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td align="center" style="padding: 20px 0;">
+                                <a href="[Your Website URL]" target="_blank" style="text-decoration: none;">
+                                    <img src="https://i.imghippo.com/files/ZyK5904cK.png" alt="[Your Project Name] Logo" width="150" style="display: block; border: 0; outline: none; text-decoration: none;">
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="content-padding" style="padding: 40px;">
+                    <h1 style="color: #333333; font-size: 28px; margin-bottom: 20px; text-align: center;">Welcome, {{FirstName}}!</h1>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+                        <tr>
+                            <td align="center">
+                                <img src="https://i.imghippo.com/files/IGq1977wA.jpg" alt="Waving hand saying Hi" width="100" class="hi-image" style="display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; max-width: 100px;">
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                        Hello {{FirstName}} {{LastName}},
+                    </p>
+                    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                        Your account has been created successfully. We're thrilled to have you with us at **[Your Project Name]**!
+                    </p>
+
+                    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                        You can now explore all the amazing features we offer. Get started by clicking the button below:
+                    </p>
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 30px; margin-bottom: 30px;">
+                        <tr>
+                            <td align="center">
+                                <table border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td class="button" style="background-color: #007bff; border-radius: 5px; text-align: center;">
+                                            <a href="[Link to your Application/Dashboard]" target="_blank" style="font-size: 18px; font-weight: bold; color: #ffffff; text-decoration: none; padding: 15px 30px; display: inline-block;">
+                                                Explore Your Account
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                        Here are a few quick links to help you get started:
+                    </p>
+                    <ul style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 20px; padding-left: 20px;">
+                        <li style="margin-bottom: 10px;"><a href="[Link to Your Features Page]" style="color: #007bff; text-decoration: none;">Discover Features</a></li>
+                        <li style="margin-bottom: 10px;"><a href="[Link to Your Documentation/Help Page]" style="color: #007bff; text-decoration: none;">Read Our Guide</a></li>
+                        <li style="margin-bottom: 10px;"><a href="[Link to Your Contact Support Page]" style="color: #007bff; text-decoration: none;">Get Support</a></li>
+                    </ul>
+
+                    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+                        If you have any questions or need assistance, please don't hesitate to reply to this email or visit our <a href="[Link to Your FAQ Page]" style="color: #007bff; text-decoration: none;">FAQ page</a>.
+                    </p>
+
+                    <p style="color: #555555; font-size: 16px; line-height: 1.6;">
+                        Best regards,<br>
+                        The **FAO E-Commerce Support Team**
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <td align="center" style="padding: 30px 40px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; border-top: 1px solid #eeeeee;">
+                    <p style="font-size: 12px; color: #888888; margin-bottom: 10px;">
+                        &copy; 2025 FAO E-Commerce. All rights reserved.
+                    </p>
+                    <p style="font-size: 12px; color: #888888; margin-bottom: 10px;">
+                        [Your Company Address, if applicable]
+                    </p>
+                    <p style="font-size: 12px; color: #888888;">
+                        <a href="[Link to Unsubscribe Page]" style="color: #888888; text-decoration: underline;">Unsubscribe</a> | <a href="[Link to Privacy Policy]" style="color: #888888; text-decoration: underline;">Privacy Policy</a>
+                    </p>
+                </td>
+            </tr>
+        </table>
+        </td>
+        </tr>
+        </table>
+    </center>
 </body>
 </html>

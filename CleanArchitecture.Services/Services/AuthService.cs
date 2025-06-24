@@ -89,20 +89,15 @@ namespace CleanArchitecture.Services.Services
 
             await _userManager.AddToRoleAsync(user, SD.Role_User);
 
-            // Generate email confirmation token
-            var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            // Do NOT generate or return email confirmation token
+            // Instead, caller should generate and send OTP
 
-            // هنا رجّعنا التوكين
             return new ApiResponse<TokenType>
             {
                 IsSuccess = true,
-                Message = "User created successfully. Please confirm your email.",
+                Message = "User created successfully. Please confirm your email with the OTP.",
                 StatusCode = 200,
-                Response = new TokenType
-                {
-                    Token = emailToken,
-                    ExpiryTokenDate = DateTime.Now.AddHours(5) // أو أي وقت مناسب
-                }
+                Response = null // No token returned
             };
         }
 

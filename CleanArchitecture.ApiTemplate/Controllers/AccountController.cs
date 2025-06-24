@@ -50,26 +50,33 @@ namespace CleanArchitecture.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            // Generate OTP
+            var otp = GenerateSimpleOtp();
+
+            // Register user (do not send confirmation token)
             var response = await _authServices.RegisterUserAsync(registerUser);
 
-            if (!response.IsSuccess || response.Response == null)
+            if (!response.IsSuccess)
                 return BadRequest(response.Message ?? "User could not be created");
 
-            var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
-                new { token = response.Response.Token, email = registerUser.Email }, Request.Scheme);
+            // Save OTP in DB for this user
+            var user = await _userManager.FindByEmailAsync(registerUser.Email);
+            if (user == null)
+                return BadRequest("User not found after registration.");
+            await _otpService.SetOtpAsync(registerUser.Email, otp, user.UserName, user.Id, TimeSpan.FromMinutes(5));
 
-            // Render confirmation email from HTML template
+            // Render confirmation email from HTML template, showing OTP
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTemplates", "RegisterConfirmation.html");
             var htmlContent = RenderTemplate(templatePath, new Dictionary<string, string>
             {
                 { "FirstName", registerUser.FirstName },
                 { "LastName", registerUser.LastName },
-                { "ConfirmationLink", confirmationLink }
+                { "Otp", otp }
             });
 
             var message = new Message(
                 new string[] { registerUser.Email! },
-                "Confirm Your Email",
+                "Confirm Your Email (OTP)",
                 htmlContent
             );
 
@@ -82,36 +89,28 @@ namespace CleanArchitecture.Api.Controllers
                 return StatusCode(500, "Email error: " + ex.Message);
             }
 
-            // Send welcome email
-            var welcomePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTemplates", "Welcome.html");
-            var welcomeContent = RenderTemplate(welcomePath, new Dictionary<string, string>
-            {
-                { "FirstName", registerUser.FirstName },
-                { "LastName", registerUser.LastName }
-            });
-            var welcomeMessage = new Message(
-                new string[] { registerUser.Email! },
-                "Welcome to Our Platform",
-                welcomeContent
-            );
-            try { _emailService.SendEmail(welcomeMessage); } catch { /* ignore */ }
-
             return Ok(response);
         }
 
         [HttpGet("ConfirmEmail")]
-        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        public async Task<IActionResult> ConfirmEmail(string email, string otp)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
-            {
-                var result = await _userManager.ConfirmEmailAsync(user, token);
-                if (result.Succeeded)
-                {
-                    return Ok(new Response { Status = "Success", Message = "Email Verified Successfully.", IsSuccess = true });
-                }
-            }
-            return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User doesn't exist or token invalid." });
+            if (user == null)
+                return BadRequest(new Response { Status = "Error", Message = "User doesn't exist.", IsSuccess = false });
+
+            var storedOtp = await _otpService.GetOtpAsync(email);
+            if (storedOtp == null)
+                return BadRequest(new Response { Status = "Error", Message = "OTP expired or not found.", IsSuccess = false });
+
+            if (storedOtp != otp)
+                return BadRequest(new Response { Status = "Error", Message = "Invalid OTP.", IsSuccess = false });
+
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+            await _otpService.SetOtpAsUsedAsync(email);
+
+            return Ok(new Response { Status = "Success", Message = "Email Verified Successfully.", IsSuccess = true });
         }
 
         [HttpPost("LogIn")]
