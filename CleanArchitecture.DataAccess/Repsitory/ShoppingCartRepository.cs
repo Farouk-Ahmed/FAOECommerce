@@ -104,5 +104,11 @@ namespace CleanArchitecture.DataAccess.Repsitory
             _context.ShoppingCartItems.Update(entity);
 
         }
+
+        public IQueryable<ShoppingCartItem> GetQuery()
+        {
+            return _context.Set<ShoppingCartItem>();
+
+        }
     }
 }

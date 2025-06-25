@@ -19,31 +19,53 @@ namespace CleanArchitecture.Api.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpPost("image")]
-        public async Task<IActionResult> UploadImage(IFormFile image)
+      
+        [HttpPost("multi-image")]
+        public async Task<IActionResult> UploadMultipleImages(List<IFormFile> images)
         {
-            try
-            {
-                if (image == null || image.Length == 0)
-                    return BadRequest("Please upload a valid image.");
+            if (images == null || images.Count == 0)
+                return BadRequest("Please upload one or more valid images.");
 
-                var imageUrl = await ImageHelper.SaveImageAsync(image);
+            List<string> imageUrls = new();
 
-                return Ok(new { imageUrl });
-            }
-            catch (Exception ex)
+            foreach (var image in images)
             {
-                return StatusCode(500, $"Error uploading image: {ex.Message}");
+                var url = await ImageHelper.SaveImageAsync(image);
+                imageUrls.Add(url);
             }
+
+            return Ok(new { imageUrls });
         }
 
-        [HttpPost("add-to-product")]
-        public async Task<IActionResult> AddImageToProduct([FromQuery] int productId, [FromQuery] string imageUrl)
+        [HttpPost("add-multiple-images")]
+        public async Task<IActionResult> AddImagesToProduct([FromBody] ProductImagesDto model)
         {
-            var photo = new ProductPhoto { ProductId = productId, Url = imageUrl };
-            _photoRepository.Add(photo);
+            if (model == null || model.ImageUrls == null || !model.ImageUrls.Any())
+                return BadRequest("Product ID and image URLs are required.");
+
+            // Create a list of photo entities
+            var photos = model.ImageUrls.Select(url => new ProductPhoto
+            {
+                ProductId = model.ProductId,
+                Url = url
+            }).ToList();
+
+            // Save photos to the database
+            foreach (var photo in photos)
+            {
+                _photoRepository.Add(photo); // Make sure this supports adding one by one or use AddRange if available
+            }
+
             await _unitOfWork.Complete();
-            return Ok(photo);
+
+            // Return success response
+            return Ok(new
+            {
+                Message = "Images added successfully.",
+                PhotoCount = photos.Count,
+                ProductId = model.ProductId,
+                Images = photos.Select(p => p.Url).ToList()
+            });
         }
 
         [HttpDelete("remove-from-product/{photoId}")]

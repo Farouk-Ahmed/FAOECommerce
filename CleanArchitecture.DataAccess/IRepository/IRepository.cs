@@ -14,5 +14,6 @@ namespace CleanArchitecture.DataAccess.IRepository
         void Delete(T entity);
         void DeleteRange(IEnumerable<T> entities);
         void Update(T entity);
+        IQueryable<T> GetQuery();
     }
 }

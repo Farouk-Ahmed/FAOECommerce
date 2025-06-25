@@ -97,5 +97,11 @@ namespace CleanArchitecture.DataAccess.Repsitory
 
             return query.ToList();
         }
+
+        public IQueryable<T> GetQuery()
+        {
+            return _dbContext.Set<T>();
+            ;
+        }
     }
 }

@@ -4,6 +4,7 @@ using CleanArchitecture.DataAccess.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CleanArchitecture.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624140804_addtotalpriceinshoppingcarttabel")]
+    partial class addtotalpriceinshoppingcarttabel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -269,9 +272,6 @@ namespace CleanArchitecture.DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
@@ -327,14 +327,14 @@ namespace CleanArchitecture.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "72d29a1b-cdfa-487b-978b-ae5e289ffa35",
+                            Id = "416c2bda-3d0b-4175-9c50-d33ec0e9fc38",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "f8fe3397-dcd4-4ab6-8dce-e3f461b1b42b",
+                            Id = "50d9c4f4-ed2a-441e-9c0a-776ee41f0928",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "User"

@@ -24,7 +24,7 @@ namespace CleanArchitecture.Api.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpGet]
+        [HttpGet (ApiRoutes.Order.GetAll)]
         public IActionResult GetAll()
         {
             var orders = _repository.GetAll(null, "OrderItems,OrderItems.Product");
@@ -44,7 +44,7 @@ namespace CleanArchitecture.Api.Controllers
             return Ok(orderDtos);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(ApiRoutes.Order.GetByID)]
         public IActionResult Get(int id)
         {
             var order = _repository.Get(o => o.Id == id, "OrderItems,OrderItems.Product");
@@ -65,7 +65,7 @@ namespace CleanArchitecture.Api.Controllers
             return Ok(dto);
         }
 
-        [HttpGet("by-user/{userId}")]
+        [HttpGet(ApiRoutes.Order.GetByUser)]
         public async Task<IActionResult> GetByUser(int userId)
         {
             var orders = await _orderRepository.GetOrdersByUserIdAsync(userId);
@@ -85,13 +85,25 @@ namespace CleanArchitecture.Api.Controllers
             return Ok(orderDtos);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Order order)
+        [HttpPost (ApiRoutes.Order.Create)]
+        public async Task<IActionResult> Create([FromBody] OrderCreateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            var order = new Order
+            {
+                UserId = dto.UserId,
+                OrderDate = DateTime.UtcNow,
+                TotalAmount = dto.Items.Sum(i => i.UnitPrice * i.Quantity),
+                OrderItems = dto.Items.Select(i => new OrderItem
+                {
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList()
+            };
             _repository.Add(order);
             await _unitOfWork.Complete();
-            var dto = new OrderDto
+            var resultDto = new OrderDto
             {
                 Id = order.Id,
                 OrderDate = order.OrderDate,
@@ -104,10 +116,10 @@ namespace CleanArchitecture.Api.Controllers
                     UnitPrice = oi.UnitPrice
                 }).ToList() ?? new List<OrderItemDto>()
             };
-            return Ok(dto);
+            return Ok(resultDto);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut(ApiRoutes.Order.Update)]
         public async Task<IActionResult> Update(int id, [FromBody] Order order)
         {
             if (id != order.Id) return BadRequest();
@@ -131,7 +143,7 @@ namespace CleanArchitecture.Api.Controllers
             return Ok(dto);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(ApiRoutes.Order.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var order = _repository.Get(o => o.Id == id);

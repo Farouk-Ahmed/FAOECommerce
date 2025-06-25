@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace CleanArchitecture.Api.Controllers
 {
@@ -24,7 +25,7 @@ namespace CleanArchitecture.Api.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpGet]
+        [HttpGet(ApiRoutes.Product.GetAll)]
         public async Task<IActionResult> GetAll()
         {
             var products = await _productRepository.GetProductsWithCategoriesAsync();
@@ -48,33 +49,41 @@ namespace CleanArchitecture.Api.Controllers
             return Ok(dto);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Product product)
+        [HttpPost(ApiRoutes.Product.Create)]
+        public async Task<IActionResult> Create([FromBody] ProductCreateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            var product = dto.Adapt<Product>();
             _repository.Add(product);
             await _unitOfWork.Complete();
-            var dto = product.Adapt<ProductDto>();
-            dto.CategoryName = product.Category?.Name;
-            dto.PhotoUrls = product.Photos?.Select(p => p.Url).ToList() ?? new List<string>();
-            return Ok(dto);
+            var createdProduct = await _repository
+       .GetQuery()
+       .Include(p => p.Category)
+       .Include(p => p.Photos) 
+       .FirstOrDefaultAsync(p => p.Id == product.Id);
+
+            var resultDto = product.Adapt<ProductDto>();
+            resultDto.CategoryName = product.Category?.Name;
+            resultDto.PhotoUrls = product.Photos?.Select(p => p.Url).ToList() ?? new List<string>();
+            return Ok(resultDto);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Product product)
+        [HttpPut(ApiRoutes.Product.Update)]
+        public async Task<IActionResult> Update(int id, [FromBody] ProductUpdateDto dto)
         {
-            if (id != product.Id) return BadRequest();
+            if (id != dto.Id) return BadRequest();
             var existing = _repository.Get(p => p.Id == id);
             if (existing == null) return NotFound();
-            _repository.Update(product);
+            dto.Adapt(existing);
+            _repository.Update(existing);
             await _unitOfWork.Complete();
-            var dto = product.Adapt<ProductDto>();
-            dto.CategoryName = product.Category?.Name;
-            dto.PhotoUrls = product.Photos?.Select(p => p.Url).ToList() ?? new List<string>();
-            return Ok(dto);
+            var resultDto = existing.Adapt<ProductDto>();
+            resultDto.CategoryName = existing.Category?.Name;
+            resultDto.PhotoUrls = existing.Photos?.Select(p => p.Url).ToList() ?? new List<string>();
+            return Ok(resultDto);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(ApiRoutes.Product.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var product = _repository.Get(p => p.Id == id);
@@ -84,7 +93,7 @@ namespace CleanArchitecture.Api.Controllers
             return Ok();
         }
 
-        [HttpGet("by-category/{categoryId}")]
+        [HttpGet(ApiRoutes.Product.GetByCategory)]
         public async Task<IActionResult> GetByCategory(int categoryId)
         {
             var products = await _productRepository.GetProductsByCategoryAsync(categoryId);
