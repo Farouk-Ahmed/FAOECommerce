@@ -30,21 +30,19 @@ public class CategoryController : ControllerBase
         _repository.Add(category);
         await _unitOfWork.Complete();
         var resultDto = category.Adapt<CategoryDto>();
-        resultDto.ProductCount = 0;
         return Ok(resultDto);
     }
 
     [HttpPut(ApiRoutes.Category.Update)]
-    public async Task<IActionResult> Update(int id, [FromBody] CategoryDto dto)
+    public async Task<IActionResult> Update(string name, [FromBody] CategoryDto dto)
     {
-        if (id != dto.Id) return BadRequest();
-        var existing = _repository.Get(c => c.Id == id);
+        if (name != dto.Name) return BadRequest();
+        var existing = _repository.Get(c => c.Name == name);
         if (existing == null) return NotFound();
         dto.Adapt(existing);
         _repository.Update(existing);
         await _unitOfWork.Complete();
         var resultDto = existing.Adapt<CategoryDto>();
-        resultDto.ProductCount = existing.Products?.Count ?? 0;
         return Ok(resultDto);
     }
 
@@ -55,7 +53,6 @@ public class CategoryController : ControllerBase
         var categoryDtos = categories.Adapt<List<CategoryDto>>();
         foreach (var (dto, entity) in categoryDtos.Zip(categories, (dto, entity) => (dto, entity)))
         {
-            dto.ProductCount = entity.Products?.Count ?? 0;
         }
         return Ok(categoryDtos);
     }
@@ -66,7 +63,6 @@ public class CategoryController : ControllerBase
         var category = _repository.Get(c => c.Id == id, "Products");
         if (category == null) return NotFound();
         var dto = category.Adapt<CategoryDto>();
-        dto.ProductCount = category.Products?.Count ?? 0;
         return Ok(dto);
     }
 

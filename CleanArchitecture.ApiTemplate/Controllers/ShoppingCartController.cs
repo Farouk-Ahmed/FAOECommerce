@@ -1,19 +1,23 @@
 ﻿using CleanArchitecture.DataAccess.IRepository;
+using CleanArchitecture.DataAccess.IUnitOfWorks;
 using CleanArchitecture.DataAccess.Models;
 using CleanArchitecture.DataAccess.Repsitory;
-using CleanArchitecture.DataAccess.IUnitOfWorks;
-using CleanArchitecture.Services.DTOs.ShoppingCarts;
 using CleanArchitecture.Services.DTOs.Orders;
+using CleanArchitecture.Services.DTOs.ShoppingCarts;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CleanArchitecture.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ShoppingCartController : ControllerBase
     {
         private readonly IShoppingCartRepository _cartRepository;
@@ -39,6 +43,14 @@ namespace CleanArchitecture.Api.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private static string GenerateRandomCartCode(int length = 8)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
         [HttpGet(ApiRoutes.ShoppingCart.GetCart)]
         public IActionResult GetCart(int userId)
         {
@@ -50,40 +62,68 @@ namespace CleanArchitecture.Api.Controllers
                 ProductName = i.Product?.Name,
                 Quantity = i.Quantity,
                 Price = i.Product?.Price ?? 0,
-                TotalPrice=i.TotalPrice
+                TotalPrice = i.TotalPrice,
+                CartCode = i.CartCode // Include CartCode in response
             }).ToList();
             return Ok(itemDtos);
         }
 
         [HttpPost(ApiRoutes.ShoppingCart.AddToCart)]
-        public async Task<IActionResult> AddToCart([FromBody] ShoppingCartItemCreateDto dto)
+        public async Task<IActionResult> AddToCart([FromBody] List<ShoppingCartItemCreateDto> items)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var product = _productRepository.Get(p => p.Id == dto.ProductId);
-            if (product == null)
-                return NotFound($"Product with ID {dto.ProductId} not found.");
+            var userId = User?.Claims?.FirstOrDefault(c =>
+                c.Type == "sub" || c.Type == "UserId" || c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            var item = dto.Adapt<ShoppingCartItem>();
-            item.ProductName = product.Name;
-            item.Price = product.Price;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
-            _repository.Add(item);
+            var cartCode = GenerateRandomCartCode();
+
+            var addedItems = new List<ShoppingCartItem>();
+
+            foreach (var dto in items.Where(i => i.ProductId > 0 && i.Quantity > 0))
+            {
+                var product = _productRepository.Get(p => p.Id == dto.ProductId);
+                if (product == null)
+                    continue;
+
+                var newItem = new ShoppingCartItem
+                {
+                    UserId = userId,
+                    ProductId = dto.ProductId,
+                    ProductName = product.Name,
+                    Quantity = dto.Quantity,
+                    Price = product.Price,
+                    TotalPrice = product.Price * dto.Quantity,
+                    CartCode = cartCode,
+                    CreatedDate = DateTime.Now
+                };
+
+                _repository.Add(newItem);
+                addedItems.Add(newItem);
+            }
+
             await _unitOfWork.Complete();
 
-            var resultDto = new ShoppingCartItemDto
+            var result = new
             {
-                Id = item.Id,
-                ProductId = item.ProductId,
-                ProductName = item.ProductName,
-                Quantity = item.Quantity,
-                Price = item.Price,
-                TotalPrice = item.Price * item.Quantity
+                cartCode = cartCode,
+                items = addedItems.Select(item => new
+                {
+                    item.Id,
+                    item.ProductId,
+                    item.ProductName,
+                    item.Quantity,
+                    item.Price,
+                    item.TotalPrice
+                })
             };
 
-            return Ok(resultDto);
+            return Ok(result);
         }
-
         [HttpPut(ApiRoutes.ShoppingCart.UpdateCartItem)]
         public async Task<IActionResult> UpdateCartItem(int id, [FromBody] ShoppingCartItemUpdateDto dto)
         {
@@ -115,14 +155,31 @@ namespace CleanArchitecture.Api.Controllers
         }
 
         [HttpPost(ApiRoutes.ShoppingCart.Checkout)]
-        public async Task<IActionResult> Checkout(string userId)
+        public async Task<IActionResult> Checkout(string userId, string cartCode)
         {
-            var cartItems = _repository.GetAll(i => i.UserId == userId.ToString(), "Product").ToList();
-            if (!cartItems.Any()) return BadRequest("Cart is empty");
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(cartCode))
+                return BadRequest("UserId and CartCode are required");
+
+            var cartItems = _repository
+                .GetAll(i => i.UserId == userId && i.CartCode == cartCode, "Product")
+                .ToList();
+
+            if (!cartItems.Any())
+                return BadRequest("Cart is empty");
+
+            // تحقق من توفّر الكمية لكل منتج
+            foreach (var item in cartItems)
+            {
+                if (item.Product == null)
+                    return BadRequest($"Product {item.ProductId} not found");
+
+                if (item.Product.Quantity < item.Quantity)
+                    return BadRequest($"Insufficient stock for {item.Product.Name}. Available: {item.Product.Quantity}, Requested: {item.Quantity}");
+            }
 
             var order = new Order
             {
-                UserId = userId.ToString(),
+                UserId = userId,
                 OrderDate = DateTime.UtcNow,
                 TotalAmount = cartItems.Sum(i => i.Product.Price * i.Quantity),
                 OrderItems = new List<OrderItem>()
@@ -137,29 +194,35 @@ namespace CleanArchitecture.Api.Controllers
                     ProductId = cartItem.ProductId,
                     Quantity = cartItem.Quantity,
                     UnitPrice = cartItem.Product.Price,
-                    
-                    
+                    CartCode = cartItem.CartCode
                 };
                 _orderItemRepository.Add(orderItem);
                 order.OrderItems.Add(orderItem);
+
+                // خصم الكمية من المنتج
+                cartItem.Product.Quantity -= cartItem.Quantity;
+
+                // حذف العنصر من السلة
                 _repository.Delete(cartItem);
             }
 
             await _unitOfWork.Complete();
-            // Return a simple order DTO
+
             var orderDto = new CleanArchitecture.Services.DTOs.Orders.OrderDto
             {
                 Id = order.Id,
                 OrderDate = order.OrderDate,
                 TotalAmount = order.TotalAmount,
-                Items = order.OrderItems?.Select(oi => new CleanArchitecture.Services.DTOs.Orders.OrderItemDto
+                Items = cartItems.Select(ci => new CleanArchitecture.Services.DTOs.Orders.OrderItemDto
                 {
-                    ProductId = oi.ProductId,
-                    ProductName = oi.Product?.Name,
-                    Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice
-                }).ToList() ?? new List<CleanArchitecture.Services.DTOs.Orders.OrderItemDto>()
+                    ProductId = ci.ProductId,
+                    ProductName = ci.Product?.Name,
+                    Quantity = ci.Quantity,
+                    UnitPrice = ci.Product?.Price ?? 0,
+                    CartCode = ci.CartCode
+                }).ToList()
             };
+
             return Ok(orderDto);
         }
     }

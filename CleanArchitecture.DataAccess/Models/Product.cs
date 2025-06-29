@@ -26,5 +26,15 @@ namespace CleanArchitecture.DataAccess.Models
         public string Url { get; set; }
         public int ProductId { get; set; }
         public Product Product { get; set; }
+        public bool IsMain { get; set; } = false; // Indicates if this is the main/cover photo
+
+    }
+    public class ProductPhotoDto
+    {
+        public int Id { get; set; }
+        public string Url { get; set; }
+        public bool IsMain { get; set; }
+        public string ProductName { get; set; }
+
     }
 }

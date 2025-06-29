@@ -38,7 +38,8 @@ namespace CleanArchitecture.Api.Controllers
                     ProductId = oi.ProductId,
                     ProductName = oi.Product?.Name,
                     Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice
+                    UnitPrice = oi.UnitPrice,
+                    CartCode = oi.CartCode
                 }).ToList() ?? new List<OrderItemDto>()
             }).ToList();
             return Ok(orderDtos);
@@ -59,7 +60,8 @@ namespace CleanArchitecture.Api.Controllers
                     ProductId = oi.ProductId,
                     ProductName = oi.Product?.Name,
                     Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice
+                    UnitPrice = oi.UnitPrice,
+                    CartCode = oi.CartCode
                 }).ToList() ?? new List<OrderItemDto>()
             };
             return Ok(dto);
@@ -79,7 +81,8 @@ namespace CleanArchitecture.Api.Controllers
                     ProductId = oi.ProductId,
                     ProductName = oi.Product?.Name,
                     Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice
+                    UnitPrice = oi.UnitPrice,
+                    CartCode = oi.CartCode
                 }).ToList() ?? new List<OrderItemDto>()
             }).ToList();
             return Ok(orderDtos);
@@ -113,7 +116,8 @@ namespace CleanArchitecture.Api.Controllers
                     ProductId = oi.ProductId,
                     ProductName = oi.Product?.Name,
                     Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice
+                    UnitPrice = oi.UnitPrice,
+                    CartCode = oi.CartCode
                 }).ToList() ?? new List<OrderItemDto>()
             };
             return Ok(resultDto);
@@ -137,7 +141,8 @@ namespace CleanArchitecture.Api.Controllers
                     ProductId = oi.ProductId,
                     ProductName = oi.Product?.Name,
                     Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice
+                    UnitPrice = oi.UnitPrice,
+                    CartCode = oi.CartCode
                 }).ToList() ?? new List<OrderItemDto>()
             };
             return Ok(dto);

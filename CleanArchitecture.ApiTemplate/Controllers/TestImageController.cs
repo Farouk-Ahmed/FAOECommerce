@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Utilites;
-using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.DataAccess.IRepository;
+﻿using CleanArchitecture.DataAccess.IRepository;
 using CleanArchitecture.DataAccess.IUnitOfWorks;
+using CleanArchitecture.DataAccess.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Utilites;
 
 namespace CleanArchitecture.Api.Controllers
 {
@@ -12,111 +17,146 @@ namespace CleanArchitecture.Api.Controllers
     public class TestImageController : ControllerBase
     {
         private readonly IRepository<ProductPhoto> _photoRepository;
+        private readonly IRepository<Product> _productRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public TestImageController(IRepository<ProductPhoto> photoRepository, IUnitOfWork unitOfWork)
+
+        public TestImageController(
+            IRepository<ProductPhoto> photoRepository,
+            IRepository<Product> productRepository,
+            IUnitOfWork unitOfWork)
         {
             _photoRepository = photoRepository;
+            _productRepository = productRepository;
             _unitOfWork = unitOfWork;
         }
 
-      
-        [HttpPost("multi-image")]
-        public async Task<IActionResult> UploadMultipleImages(List<IFormFile> images)
+        [HttpPost("upload-to-product")]
+        public async Task<IActionResult> UploadAndAssignImages(
+            [FromForm] int productId,
+            [FromForm] List<IFormFile> images,
+            [FromForm] int? mainIndex)
         {
             if (images == null || images.Count == 0)
-                return BadRequest("Please upload one or more valid images.");
+                return BadRequest("Please upload at least one image.");
 
-            List<string> imageUrls = new();
+            // Replace the 'Any' call with a proper query
+            var productExists = _productRepository.GetAllQuery(p => p.Id == productId).Any();
+            if (!productExists)
+                return NotFound("Product not found.");
 
-            foreach (var image in images)
+            List<ProductPhoto> photos = new();
+
+            for (int i = 0; i < images.Count; i++)
             {
-                var url = await ImageHelper.SaveImageAsync(image);
-                imageUrls.Add(url);
+                var image = images[i];
+
+                try
+                {
+                    var url = await ImageHelper.SaveImageAsync(image);
+                    photos.Add(new ProductPhoto
+                    {
+
+                        ProductId = productId,
+                        Url = url,
+                        IsMain = (mainIndex.HasValue && mainIndex.Value == i),
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Error saving image: {ex.Message}");
+                }
             }
 
-            return Ok(new { imageUrls });
-        }
-
-        [HttpPost("add-multiple-images")]
-        public async Task<IActionResult> AddImagesToProduct([FromBody] ProductImagesDto model)
-        {
-            if (model == null || model.ImageUrls == null || !model.ImageUrls.Any())
-                return BadRequest("Product ID and image URLs are required.");
-
-            // Create a list of photo entities
-            var photos = model.ImageUrls.Select(url => new ProductPhoto
+            try
             {
-                ProductId = model.ProductId,
-                Url = url
-            }).ToList();
+                // Unset previous main photo if needed
+                if (mainIndex.HasValue)
+                {
+                    var existingMain = _photoRepository.GetAll(p => p.ProductId == productId && p.IsMain).ToList();
+                    foreach (var item in existingMain)
+                        item.IsMain = false;
+                }
 
-            // Save photos to the database
-            foreach (var photo in photos)
+                foreach (var photo in photos)
+                {
+                    _photoRepository.Add(photo);
+                }
+
+                await _unitOfWork.Complete();
+            }
+            catch (Exception ex)
             {
-                _photoRepository.Add(photo); // Make sure this supports adding one by one or use AddRange if available
+                return StatusCode(500, $"Database error: {ex.Message}");
             }
 
-            await _unitOfWork.Complete();
-
-            // Return success response
             return Ok(new
             {
-                Message = "Images added successfully.",
-                PhotoCount = photos.Count,
-                ProductId = model.ProductId,
-                Images = photos.Select(p => p.Url).ToList()
+                Message = "Images uploaded and linked successfully.",
+                ProductId = productId,
+                Photos = photos.Select(p => new { p.Url, p.IsMain })
             });
-        }
-
-        [HttpDelete("remove-from-product/{photoId}")]
-        public async Task<IActionResult> RemoveImageFromProduct(int photoId)
-        {
-            var photo = _photoRepository.Get(p => p.Id == photoId);
-            if (photo == null) return NotFound();
-            ImageHelper.DeleteImage(photo.Url);
-            _photoRepository.Delete(photo);
-            await _unitOfWork.Complete();
-            return Ok();
         }
 
         [HttpGet("product-images/{productId}")]
         public IActionResult GetProductImages(int productId)
         {
-            var photos = _photoRepository.GetAll(p => p.ProductId == productId);
+            var photos = _photoRepository
+                .GetQuery()
+                .Where(p => p.ProductId == productId)
+                .Include(p => p.Product)
+                .Select(p => new ProductPhotoDto
+                {
+                    Id = p.Id,
+                    Url = p.Url,
+                    IsMain = p.IsMain,
+                    ProductName = p.Product.Name
+                })
+                .ToList();
+
             return Ok(photos);
         }
 
-        [HttpDelete("image")]
-        public IActionResult DeleteImage([FromQuery] string imageUrl)
+        [HttpDelete("remove-photo/{photoId}")]
+        public async Task<IActionResult> RemoveImage(int photoId)
         {
-            try
-            {
-                bool deleted = ImageHelper.DeleteImage(imageUrl);
-                return deleted
-                    ? Ok("Image deleted successfully.")
-                    : NotFound("Image not found.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error deleting image: {ex.Message}");
-            }
+            var photo = _photoRepository.Get(p => p.Id == photoId);
+            if (photo == null) return NotFound("Photo not found.");
+
+            ImageHelper.DeleteImage(photo.Url);
+            _photoRepository.Delete(photo);
+            await _unitOfWork.Complete();
+
+            return Ok("Image deleted.");
         }
 
-        [HttpPut("image")]
+        [HttpPut("replace-photo")]
         public async Task<IActionResult> ReplaceImage(IFormFile newImage, [FromQuery] string? oldImageUrl)
         {
             try
             {
                 if (newImage == null || newImage.Length == 0)
-                    return BadRequest("Please upload a valid new image.");
+                    return BadRequest("Please provide a valid new image.");
 
                 var newImageUrl = await ImageHelper.ReplaceImageAsync(newImage, oldImageUrl);
-
                 return Ok(new { newImageUrl });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error replacing image: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("delete-by-url")]
+        public IActionResult DeleteImageByUrl([FromQuery] string imageUrl)
+        {
+            try
+            {
+                bool deleted = ImageHelper.DeleteImage(imageUrl);
+                return deleted ? Ok("Image deleted successfully.") : NotFound("Image not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error deleting image: {ex.Message}");
             }
         }
     }

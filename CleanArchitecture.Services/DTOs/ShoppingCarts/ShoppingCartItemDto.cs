@@ -8,5 +8,6 @@ namespace CleanArchitecture.Services.DTOs.ShoppingCarts
         public int Quantity { get; set; }
         public decimal Price { get; set; }
         public decimal TotalPrice { get; set; }
+        public string CartCode { get; set; } // Expose CartCode in DTO
     }
 }

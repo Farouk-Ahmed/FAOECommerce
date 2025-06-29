@@ -23,5 +23,9 @@ namespace CleanArchitecture.DataAccess.Models
         public Product Product { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public string CartCode { get; set; } 
+
+
+
     }
 }

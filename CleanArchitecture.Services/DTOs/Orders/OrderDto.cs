@@ -13,5 +13,6 @@ namespace CleanArchitecture.Services.DTOs.Orders
         public string ProductName { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public string CartCode { get; set; } // Add CartCode to OrderItemDto
     }
 }

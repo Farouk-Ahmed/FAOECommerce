@@ -15,7 +15,8 @@ namespace CleanArchitecture.DataAccess.Models
         public int Quantity { get; set; }
         public string ProductName { get; set; }
         public decimal TotalPrice { get; set; }
-
+        public string CartCode { get; set; } // Unique code for the cart item
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public Product Product { get; set; }
         public decimal Price { get; set; }
     }
