@@ -1,3 +1,4 @@
+
 namespace CleanArchitecture.Services.DTOs.Orders
 {
     public class OrderCreateDto
@@ -11,4 +12,5 @@ namespace CleanArchitecture.Services.DTOs.Orders
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
     }
+
 }

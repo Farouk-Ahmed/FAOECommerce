@@ -1,9 +1,4 @@
-﻿using CleanArchitecture.DataAccess.Contexts;
-using CleanArchitecture.DataAccess.IRepository;
-using CleanArchitecture.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-
-
+﻿
 namespace CleanArchitecture.DataAccess.Repsitory
 {
     public class ApplicationUserRepository : IApplicationUserRepository

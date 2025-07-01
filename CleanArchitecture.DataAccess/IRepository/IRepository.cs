@@ -1,7 +1,4 @@
-﻿using CleanArchitecture.DataAccess.Models;
-using System.Linq.Expressions;
-
-
+﻿
 namespace CleanArchitecture.DataAccess.IRepository
 {
     public interface IRepository<T> where T : ModelBase

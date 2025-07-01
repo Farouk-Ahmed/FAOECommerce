@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.OpenApi.Models;
-
-namespace CleanArchitecture.Api
+﻿namespace CleanArchitecture.Api
 {
     public static class DependencyInjection
     {
@@ -53,7 +50,40 @@ namespace CleanArchitecture.Api
                });
 
             #endregion
-           
+
+            #region JWT
+            // JWT config
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ClockSkew = TimeSpan.Zero,
+                    ValidIssuer = config["JWT:ValidIssuer"],
+                    ValidAudience = config["JWT:ValidAudience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWT:Secret"]))
+                };
+            });
+            #endregion
+
+
+            #region Email
+            var emailconfig = config.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+            services.AddSingleton(emailconfig);
+            services.AddScoped<IEmailService, EmailService>();
+            services.Configure<IdentityOptions>(opts => opts.SignIn.RequireConfirmedEmail = true);
+            #endregion
+
             return services;
         }
     }

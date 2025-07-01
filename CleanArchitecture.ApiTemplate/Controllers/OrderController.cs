@@ -1,13 +1,3 @@
-using CleanArchitecture.DataAccess.IRepository;
-using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.DataAccess.IUnitOfWorks;
-using CleanArchitecture.Services.DTOs.Orders;
-using Mapster;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Collections.Generic;
-
 namespace CleanArchitecture.Api.Controllers
 {
     [Route("api/[controller]")]

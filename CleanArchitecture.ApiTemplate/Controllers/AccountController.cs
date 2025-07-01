@@ -1,18 +1,4 @@
-﻿using BrainHope.Services.DTO.Authentication.SignIn;
-using BrainHope.Services.DTO.Authentication.SingUp;
-using BrainHope.Services.DTO.Email;
-using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.Services.DTOs.Responses;
-using CleanArchitecture.Services.Interfaces;
-using CleanArchitecture.Services.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using System.IO;
-using System.Text;
-
-namespace CleanArchitecture.Api.Controllers
+﻿namespace CleanArchitecture.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

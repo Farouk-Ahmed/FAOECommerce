@@ -1,9 +1,4 @@
-﻿using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.Utilities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-
+﻿
 namespace CleanArchitecture.DataAccess.Contexts
 {
     public class ApplicationDbContext: IdentityDbContext<ApplicationUser>

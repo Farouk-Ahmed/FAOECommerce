@@ -1,9 +1,5 @@
-﻿using CleanArchitecture.Services.Interfaces;
-using CleanArchitecture.DataAccess.Contexts;
-using CleanArchitecture.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
+﻿
+
 
 namespace CleanArchitecture.Services.Services
 {

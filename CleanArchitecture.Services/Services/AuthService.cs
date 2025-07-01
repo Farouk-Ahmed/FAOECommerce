@@ -1,23 +1,4 @@
-﻿using BrainHope.Services.DTO.Authentication.SingUp;
-using BrainHope.Services.DTO.Email;
-using CleanArchitecture.DataAccess.Contexts;
-using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.Services.DTOs.Responses;
-using CleanArchitecture.Services.Interfaces;
-using CleanArchitecture.Utilities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using MimeKit;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace CleanArchitecture.Services.Services
 {
     public class AuthService : IAuthService

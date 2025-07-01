@@ -1,13 +1,4 @@
-﻿using BrainHope.Services.DTO.Email;
-using MimeKit;
-using MailKit.Net.Smtp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MailKit.Security;
-using CleanArchitecture.Services.Interfaces;
+﻿
 
 namespace CleanArchitecture.Services.Services
 {

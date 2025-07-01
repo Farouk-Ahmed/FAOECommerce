@@ -1,10 +1,3 @@
-using CleanArchitecture.DataAccess.Contexts;
-using CleanArchitecture.DataAccess.IRepository;
-using CleanArchitecture.DataAccess.IUnitOfWorks;
-using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.DataAccess.Repsitory;
-using System;
-using System.Threading.Tasks;
 
 namespace CleanArchitecture.DataAccess.UnitOfWorks
 {

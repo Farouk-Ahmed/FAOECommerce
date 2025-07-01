@@ -1,6 +1,4 @@
-using CleanArchitecture.DataAccess.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace CleanArchitecture.DataAccess.IRepository
 {

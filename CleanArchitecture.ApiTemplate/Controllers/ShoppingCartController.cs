@@ -1,19 +1,4 @@
-﻿using CleanArchitecture.DataAccess.IRepository;
-using CleanArchitecture.DataAccess.IUnitOfWorks;
-using CleanArchitecture.DataAccess.Models;
-using CleanArchitecture.DataAccess.Repsitory;
-using CleanArchitecture.Services.DTOs.Orders;
-using CleanArchitecture.Services.DTOs.ShoppingCarts;
-using Mapster;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-
-namespace CleanArchitecture.Api.Controllers
+﻿namespace CleanArchitecture.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
