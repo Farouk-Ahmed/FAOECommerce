@@ -10,6 +10,7 @@
         private readonly IRepository<Order> _orderRepository;
         private readonly IRepository<OrderItem> _orderItemRepository;
         private readonly IRepository<Product> _productRepository;
+        private readonly IRepository<Invoice> _invoiceRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public ShoppingCartController(
@@ -18,6 +19,7 @@
             IRepository<Order> orderRepository,
             IRepository<OrderItem> orderItemRepository,
             IRepository<Product> productRepository,
+            IRepository<Invoice> invoiceRepository,
             IUnitOfWork unitOfWork)
         {
             _cartRepository = cartRepository;
@@ -25,6 +27,7 @@
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
             _productRepository = productRepository;
+            _invoiceRepository = invoiceRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -193,22 +196,39 @@
 
             await _unitOfWork.Complete();
 
-            var orderDto = new CleanArchitecture.Services.DTOs.Orders.OrderDto
+            // Create Invoice after order is created
+            var invoice = new CleanArchitecture.DataAccess.Models.Invoice
             {
-                Id = order.Id,
-                OrderDate = order.OrderDate,
+                InvoiceNumber = cartCode,
+                OrderId = order.Id,
+                UserId = userId,
+                InvoiceDate = DateTime.UtcNow,
                 TotalAmount = order.TotalAmount,
-                Items = cartItems.Select(ci => new CleanArchitecture.Services.DTOs.Orders.OrderItemDto
+                OrderItems = order.OrderItems
+            };
+            _invoiceRepository.Add(invoice);
+            await _unitOfWork.Complete();
+
+            // Map Invoice to InvoiceDto
+            var invoiceDto = new CleanArchitecture.Services.DTOs.Invoices.InvoiceDto
+            {
+                Id = invoice.Id,
+                InvoiceNumber = invoice.InvoiceNumber,
+                OrderId = invoice.OrderId,
+                UserId = invoice.UserId,
+                InvoiceDate = invoice.InvoiceDate,
+                TotalAmount = invoice.TotalAmount,
+                OrderItems = invoice.OrderItems.Select(oi => new CleanArchitecture.Services.DTOs.Invoices.InvoiceOrderItemDto
                 {
-                    ProductId = ci.ProductId,
-                    ProductName = ci.Product?.Name,
-                    Quantity = ci.Quantity,
-                    UnitPrice = ci.Product?.Price ?? 0,
-                    CartCode = ci.CartCode
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product?.Name,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice,
+                    CartCode = oi.CartCode
                 }).ToList()
             };
 
-            return Ok(orderDto);
+            return Ok(invoiceDto);
         }
     }
 }

@@ -6,6 +6,7 @@ namespace CleanArchitecture.Services.DTOs.Orders
         public DateTime OrderDate { get; set; }
         public decimal TotalAmount { get; set; }
         public List<OrderItemDto> Items { get; set; }
+        public string InvoiceNumber { get; set; } // Invoice number same as cart code
     }
     public class OrderItemDto
     {

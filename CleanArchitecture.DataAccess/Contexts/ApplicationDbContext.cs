@@ -1,5 +1,4 @@
-﻿
-namespace CleanArchitecture.DataAccess.Contexts
+﻿namespace CleanArchitecture.DataAccess.Contexts
 {
     public class ApplicationDbContext: IdentityDbContext<ApplicationUser>
     {
@@ -11,6 +10,7 @@ namespace CleanArchitecture.DataAccess.Contexts
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Otp> Otps { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
 
@@ -68,6 +68,20 @@ namespace CleanArchitecture.DataAccess.Contexts
                 .WithMany(u => u.CartItems)
                 .HasForeignKey(ci => ci.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Invoice - Order (one-to-one)
+            builder.Entity<Invoice>()
+                .HasOne(i => i.Order)
+                .WithOne()
+                .HasForeignKey<Invoice>(i => i.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Invoice - ApplicationUser (many-to-one)
+            builder.Entity<Invoice>()
+                .HasOne(i => i.User)
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
         private static void SeedRoles(ModelBuilder builder)
         {
